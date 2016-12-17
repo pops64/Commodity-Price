@@ -1091,4 +1091,826 @@ function Y:getExistingCommodity(m)
   function Y:syncCommodity(m,o,q,w,x,y,z,s,b2)
     local k=self:getCommodity(m)k:update(o,q,true)
     if s~=nil then 
-      k:setCurrentTrend(s)end;if w~=nil and x~=nil then k:setMeanPriceSumAndCount(w,x)end;if y~=nil then k:setHighestPrice(y)end;if z~=nil then k:setLowestPrice(z)end;if s~=nil then k:setCurrentTrend(s)end;if k.changeFlags~=0 then self.commoditiesDirty=true end;k.changeFlags=0;return k end;function Y:updateCommodities()local b3=true;for m,G in pairs(FillUtil.fillTypeIndexToDesc)do if G.showOnPriceTable then local k=self:getExistingCommodity(m)if k==nil then aZ:sendRequest(m)b3=false end end end;if b3 then self.initialSyncDone=true end end;function Y:initialServerUpdates()if not self.initialSyncDone then self:updateCommodities()end end;function Y:serverUpdates()if self.player.nickname==''then self.player.changeFlags=self.player.populatedFlags end;if self.player.changeFlags~=0 then b0:sendUpdate(self.player,self.clientToServerUpdateInterval,false)self.player.changeFlags=0 end end;function Y:update(b4)self.dt=self.dt+b4;self.gameTime=g_currentMission.environment.dayTime+g_currentMission.environment.currentDay*24*60*60*1000;self.lastSyncTime=self.lastSyncTime+b4;if self.lastSyncTime>=self.clientToServerUpdateInterval then self:initialServerUpdates()self:serverUpdates()self.lastSyncTime=0 end end;function Y:minuteChanged()self:updateCommodities()end;function Y:deleteMap()end;function Y:loadMap(b5)self.isClient=g_currentMission:getIsClient()self.isServer=g_currentMission:getIsServer()self.isDedicated=g_dedicatedServerInfo~=nil end;function Y:updatePlayer(b6,aI,b7,b8,aE,aG,aD,aC,aP)if b6~=nil then self.player.nickname=b6 end;if aI~=nil then self:setFontSize(aI)end;if b7~=nil then self:setBasePosX(b7)end;if b8~=nil then self:setBasePosY(b8)end;if aE~=nil then self:setHAlignment(aE)end;if aG~=nil then self:setVAlignment(aG)end;if aD~=nil then self:setBackgroundAlpha(aD)end;if aC~=nil then self:setNormalizePrices(aC)end;if aP~=nil then self:setOrderBy(aP)end;self.player.changeFlags=0 end;X(Y)aj(Y)as(Y)aB(Y)addModEventListener(Y)return Y end;local function b9(ba,b1)function ba:saveCommodity(bb,bc,bd,k)local be=string.format(bc..".Commodity(%d)",bd)setXMLInt(bb,be.."#fillTypeId",k.fillTypeId)setXMLFloat(bb,be.."#meanPriceSum",k.meanPriceSum)setXMLFloat(bb,be.."#meanPriceCount",k.meanPriceCount)setXMLFloat(bb,be.."#highestPrice",k.highestPrice)setXMLFloat(bb,be.."#lowestPrice",k.lowestPrice)end;function ba:saveCommodities(bb,bf)local bc=bf..".Commodities"local bd=0;for aN,k in pairs(self.commodities)do self:saveCommodity(bb,bc,bd,k)bd=bd+1 end end;function ba:savePlayer(bb,bg,bh,bi)local bj=string.format(bg..".Player(%d)",bh)setXMLString(bb,bj.."#nickname",bi.nickname)setXMLFloat(bb,bj.."#fontSize",bi.fontSize)setXMLFloat(bb,bj.."#basePosX",bi.basePosX)setXMLFloat(bb,bj.."#basePosY",bi.basePosY)setXMLString(bb,bj.."#hAlignment",bi.hAlignment)setXMLString(bb,bj.."#vAlignment",bi.vAlignment)setXMLFloat(bb,bj.."#backgroundAlpha",bi.backgroundAlpha)setXMLInt(bb,bj.."#orderBy",bi.orderBy)setXMLBool(bb,bj.."#normalizePrices",bi.normalizePrices)end;function ba:savePlayers(bb,bf)local bg=bf..".Players"local bh=0;for aN,bi in pairs(self.players)do self:savePlayer(bb,bg,bh,bi)bh=bh+1 end end;function ba:saveSavegameToFile(bb)local bf="CommodityPrices"setXMLInt(bb,bf.."#serverToClientUpdateInterval",self.serverToClientUpdateInterval)setXMLInt(bb,bf.."#clientToServerUpdateInterval",self.clientToServerUpdateInterval)self:savePlayers(bb,bf)self:saveCommodities(bb,bf)end;function ba:saveSavegame()local bf="CommodityPrices"local bb=createXMLFile("CommodityPrices.xml",g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml',bf)self:saveSavegameToFile(bb)saveXMLFile(bb)end;function ba:loadCommodity(bb,bc,bd)local be=string.format(bc..".Commodity(%d)",bd)local bk=false;local m=getXMLInt(bb,be.."#fillTypeId")if m~=nil then self:syncCommodity(m,getXMLFloat(bb,be.."#currentPriceLocationName"),getXMLFloat(bb,be.."#currentPrice"),getXMLFloat(bb,be.."#meanPriceSum"),getXMLFloat(bb,be.."#meanPriceCount"),getXMLFloat(bb,be.."#highestPrice"),getXMLFloat(bb,be.."#lowestPrice"))bk=true end;return bk end;function ba:loadCommodities(bb,bf)local bc=bf..".Commodities"self.commodities={}local bd=0;while self:loadCommodity(bb,bc,bd)do bd=bd+1 end end;function ba:loadPlayer(bb,bg,bh)local bj=string.format(bg..".Player(%d)",bh)local bk=false;local b6=getXMLString(bb,bj.."#nickname")if b6~=nil then local bi=b1:new(b6)bi:setFontSize(Utils.getNoNil(getXMLFloat(bb,bj.."#fontSize"),0.01))bi:setBasePosX(Utils.getNoNil(getXMLFloat(bb,bj.."#basePosX"),0.97708))bi:setBasePosY(Utils.getNoNil(getXMLFloat(bb,bj.."#basePosY"),0.89583))bi:setHAlignment(Utils.getNoNil(getXMLString(bb,bj.."#hAlignment"),"right"))bi:setVAlignment(Utils.getNoNil(getXMLString(bb,bj.."#vAlignment"),"top"))bi:setBackgroundAlpha(Utils.getNoNil(getXMLFloat(bb,bj.."#backgroundAlpha"),0.7))bi:setNormalizePrices(Utils.getNoNil(getXMLBool(bb,bj.."#normalizePrices"),true))bi:setOrderBy(Utils.getNoNil(getXMLInt(bb,bj.."#orderBy"),7))self.players[bi.nickname]=bi;bk=true end;return bk end;function ba:loadPlayers(bb,bf)local bg=bf..".Players"self.players={}local bh=0;while self:loadPlayer(bb,bg,bh)do bh=bh+1 end end;function ba:loadSavegameFromFile(bb)local bf="CommodityPrices"self.serverToClientUpdateInterval=Utils.getNoNil(getXMLInt(bb,bf.."#serverToClientUpdateInterval"),1000)self.clientToServerUpdateInterval=Utils.getNoNil(getXMLInt(bb,bf.."#clientToServerUpdateInterval"),1000)self:loadPlayers(bb,bf)self:loadCommodities(bb,bf)self.firstLoad=true end;function ba:loadSavegame()local bf="CommodityPrices"local bk=false;if g_currentMission.missionInfo.savegameDirectory and fileExists(g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml')then local bb=loadXMLFile("CommodityPrices.xml",g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml')self:loadSavegameFromFile(bb)bk=true end;return bk end;g_careerScreen.saveSavegame=Utils.appendedFunction(g_careerScreen.saveSavegame,function()ba:saveSavegame()end)end;local function bl(aY,bm,a_,b0,b1)local ba={path=aY,commodities={},players={},gameTime=0,dt=0,firstLoad=true,serverToClientUpdateInterval=1000,clientToServerUpdateInterval=1000}function ba:getBestLocationInfo(m)local q=0;local o=nil;local s=nil;for bn,aN in pairs(g_currentMission.tipTriggers)do if bn.acceptedFillTypes[m]then local bo=bn:getEffectiveFillTypePrice(m)*1000;if bo>q then q=bo;o=bn.stationName;s=bn:getCurrentPricingTrend(m)end end end;return math.floor(q),o,s end;function ba:getExistingCommodity(m)local k=self.commodities[m]return k end;function ba:getCommodity(m)local k=self.commodities[m]if k==nil then k=a_:new(m)self.commodities[m]=k end;return k end;function ba:syncCommodity(m,o,q,w,x,y,z,b2)local k=self:getCommodity(m)if o~=nil and q~=nil then k:update(o,q,true)end;if w~=nil and x~=nil then k:setMeanPriceSumAndCount(w,x)end;if y~=nil then k:setHighestPrice(y)end;if z~=nil then k:setLowestPrice(z)end;return k end;function ba:updateCommodity(m)local p=false;local k=self:getCommodity(m)local q,o,s=self:getBestLocationInfo(m)k:update(o,q)k:setCurrentTrend(s)end;function ba:updateCommodities()for m,G in pairs(FillUtil.fillTypeIndexToDesc)do if G.showOnPriceTable then self:updateCommodity(m)elseif self.commodities[m]~=nil then self.commodities[m]=nil end end end;function ba:update(b4)self.dt=self.dt+b4;self.gameTime=g_currentMission.environment.dayTime+g_currentMission.environment.currentDay*24*60*60*1000;if self.lastSyncTime~=nil then self.lastSyncTime=self.lastSyncTime+b4 end;if self.firstLoad then if self.lastUpdateTime==nil then self.lastUpdateTime=self.gameTime end;if self.gameTime-self.lastUpdateTime>=500 then self.firstLoad=nil;self.lastUpdateTime=self.gameTime;self:updateCommodities()self.lastSyncTime=0 end elseif self.lastSyncTime~=nil and self.lastSyncTime>=self.serverToClientUpdateInterval then for aN,k in pairs(self.commodities)do if k.changeFlags>0 then bm:sendUpdate(k)k.changeFlags=0 end end;for aN,bi in pairs(self.players)do if bi.changeFlags~=0 then b0:sendUpdate(bi,self.clientToServerUpdateInterval,true)bi.changeFlags=0 end end;self.lastSyncTime=0 end end;function ba:updatePlayer(b6,aI,b7,b8,aE,aG,aD,aC,aP,bp)local bi=self.players[b6]local bq=false;if bi==nil then bi=b1:new(b6)self.players[bi.nickname]=bi;bq=true end;if bq or not bp then if aI~=nil then bi:setFontSize(aI)end;if b7~=nil then bi:setBasePosX(b7)end;if b8~=nil then bi:setBasePosY(b8)end;if aE~=nil then bi:setHAlignment(aE)end;if aG~=nil then bi:setVAlignment(aG)end;if aD~=nil then bi:setBackgroundAlpha(aD)end;if aC~=nil then bi:setNormalizePrices(aC)end;if aP~=nil then bi:setOrderBy(aP)end end;if bp then bi.changeFlags=bi.POPULATED_ALL elseif not bq then bi.changeFlags=0 end end;function ba:minuteChanged()self:updateCommodities()end;function ba:deleteMap()end;function ba:loadMap(b5)self.isClient=g_currentMission:getIsClient()self.isServer=g_currentMission:getIsServer()self.isDedicated=g_dedicatedServerInfo~=nil;self:loadSavegame()g_currentMission.environment:addMinuteChangeListener(self)end;function ba:draw()end;function ba:mouseEvent(at,au,av,aw,ax)end;function ba:keyEvent(ay,az,aA,av)end;addModEventListener(ba)b9(ba,b1)return ba end;local function br()local bs={}local bt=Class(bs,Event)function bs:emptyNew()local self=Event:new(bt)return self end;function bs:new(m)local self=bs:emptyNew()self.fillTypeId=m;return self end;function bs:readStream(bu,bv)self.fillTypeId=streamReadFloat32(bu)self:run(bv)end;function bs:writeStream(bu,bv)streamWriteFloat32(bu,self.fillTypeId)end;function bs:run(bv)local k=CommodityPricesServer:getExistingCommodity(self.fillTypeId)if k~=nil then k.changeFlags=k.populatedFlags end end;function bs:sendRequest(m)local bw=bs:new(m)g_client:getServerConnection():sendEvent(bw)end;InitEventClass(bs,"CommodityPricesRequestEvent")return bs end;local function bx(aZ,a_)local by={}local bz=Class(by,Event)function by:emptyNew()local self=Event:new(bz)return self end;function by:readStream(bu,bv)self.fillTypeId=streamReadFloat32(bu)self.changeFlags=streamReadInt32(bu)if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then self.currentPriceLocationName=streamReadString(bu)end;if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then self.currentPrice=streamReadFloat32(bu)end;if bitAND(self.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then self.meanPriceSum=streamReadFloat32(bu)end;if bitAND(self.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then self.meanPriceCount=streamReadFloat32(bu)end;if bitAND(self.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then self.highestPrice=streamReadFloat32(bu)end;if bitAND(self.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then self.lowestPrice=streamReadFloat32(bu)end;if bitAND(self.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then self.currentTrend=streamReadFloat32(bu)end;self:run(bv)end;function by:writeStream(bu,bv)streamWriteFloat32(bu,self.fillTypeId)streamWriteInt32(bu,self.changeFlags)if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then streamWriteString(bu,self.currentPriceLocationName)end;if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then streamWriteFloat32(bu,self.currentPrice)end;if bitAND(self.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then streamWriteFloat32(bu,self.meanPriceSum)end;if bitAND(self.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then streamWriteFloat32(bu,self.meanPriceCount)end;if bitAND(self.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then streamWriteFloat32(bu,self.highestPrice)end;if bitAND(self.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then streamWriteFloat32(bu,self.lowestPrice)end;if bitAND(self.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then streamWriteFloat32(bu,self.currentTrend)end end;function by:run(bv)if g_dedicatedServerInfo==nil then local k=CommodityPricesClient:getExistingCommodity(self.fillTypeId)if k~=nil and k.populatedFlags==a_.POPULATED_ALL or self.changeFlags==a_.POPULATED_ALL then CommodityPricesClient:syncCommodity(self.fillTypeId,self.currentPriceLocationName,self.currentPrice,self.meanPriceSum,self.meanPriceCount,self.highestPrice,self.lowestPrice,self.currentTrend)else aZ:sendRequest(self.fillTypeId)end end end;function by:sendUpdate(k,bv,bA)local bw=by:emptyNew()bw.fillTypeId=k.fillTypeId;bw.changeFlags=k.changeFlags;if bA then bw.changeFlags=k.populatedFlags end;if bw.changeFlags~=0 and k.populatedFlags==a_.POPULATED_ALL then if bitAND(bw.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then bw.currentPriceLocationName=k.currentPriceLocationName end;if bitAND(bw.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then bw.currentPrice=k.currentPrice end;if bitAND(bw.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then bw.meanPriceSum=k.meanPriceSum end;if bitAND(bw.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then bw.meanPriceCount=k.meanPriceCount end;if bitAND(bw.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then bw.highestPrice=k.highestPrice end;if bitAND(bw.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then bw.lowestPrice=k.lowestPrice end;if bitAND(bw.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then bw.currentTrend=k.currentTrend end;if bv==nil then g_server:broadcastEvent(bw,g_dedicatedServerInfo==nil)else bv:sendEvent(bw)end end end;InitEventClass(by,"CommodityPricesUpdateEvent")return by end;local function bB()local bi={}local bC=Class(bi)bi.CHANGED_FONTSIZE=1;bi.CHANGED_BASEPOSX=2;bi.CHANGED_BASEPOSY=4;bi.CHANGED_HALIGNMENT=8;bi.CHANGED_VALIGNMENT=16;bi.CHANGED_BACKGROUNDALPHA=32;bi.CHANGED_NORMALIZEPRICES=64;bi.CHANGED_ORDERBY=128;bi.POPULATED_ALL=255;function bi:new(b6,n)local self={}setmetatable(self,n or bC)self.changeFlags=0;self.populatedFlags=0;self.nickname=b6;return self end;function bi:setFontSize(aI)local p=false;if self.fontSize~=aI then self.fontSize=aI;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_FONTSIZE)if self.fontSize~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_FONTSIZE)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_FONTSIZE)end;p=true end;return p end;function bi:setBasePosX(b7)local p=false;if self.basePosX~=b7 then self.basePosX=b7;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BASEPOSX)if self.basePosX~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BASEPOSX)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BASEPOSX)end;p=true end;return p end;function bi:setBasePosY(b8)local p=false;if self.basePosY~=b8 then self.basePosY=b8;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BASEPOSY)if self.basePosY~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BASEPOSY)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BASEPOSY)end;p=true end;return p end;function bi:setHAlignment(aE)local p=false;if self.hAlignment~=aE then self.hAlignment=aE;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_HALIGNMENT)if self.hAlignment~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_HALIGNMENT)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_HALIGNMENT)end;p=true end;return p end;function bi:setVAlignment(aG)local p=false;if self.vAlignment~=aG then self.vAlignment=aG;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_VALIGNMENT)if self.vAlignment~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_VALIGNMENT)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_VALIGNMENT)end;p=true end;return p end;function bi:setBackgroundAlpha(aD)local p=false;if self.backgroundAlpha~=aD then self.backgroundAlpha=aD;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BACKGROUNDALPHA)if self.backgroundAlpha~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BACKGROUNDALPHA)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BACKGROUNDALPHA)end;p=true end;return p end;function bi:setNormalizePrices(aC)local p=false;if self.normalizePrices~=aC then self.normalizePrices=aC;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_NORMALIZEPRICES)if self.normalizePrices~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_NORMALIZEPRICES)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_NORMALIZEPRICES)end;p=true end;return p end;function bi:setOrderBy(aP)local p=false;if self.orderBy~=aP then self.orderBy=aP;self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_ORDERBY)if self.orderBy~=nil then self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_ORDERBY)else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_ORDERBY)end;p=true end;return p end;return bi end;local function bD(b1)local b0={}local bE=Class(b0,Event)function b0:emptyNew()local self=Event:new(bE)return self end;function b0:new(b6,bF,bG,aI,b7,b8,aE,aG,aD,aC,aP,bH,bI)local self=b0:emptyNew()self.nickname=b6;self.changeFlags=bF;self.populatedFlags=bG;self.fontSize=aI;self.basePosX=b7;self.basePosY=b8;self.hAlignment=aE;self.vAlignment=aG;self.backgroundAlpha=aD;self.normalizePrices=aC;self.orderBy=aP;self.clientToServerUpdateInterval=bH;self.isFromServer=bI;return self end;function b0:readStream(bu,bv)self.isFromServer=streamReadBool(bu)self.clientToServerUpdateInterval=streamReadInt32(bu)self.nickname=streamReadString(bu)self.changeFlags=streamReadInt32(bu)if bitAND(self.changeFlags,b1.CHANGED_FONTSIZE)~=0 then self.fontSize=streamReadFloat32(bu)end;if bitAND(self.changeFlags,b1.CHANGED_BASEPOSX)~=0 then self.basePosX=streamReadFloat32(bu)end;if bitAND(self.changeFlags,b1.CHANGED_BASEPOSY)~=0 then self.basePosY=streamReadFloat32(bu)end;if bitAND(self.changeFlags,b1.CHANGED_HALIGNMENT)~=0 then self.hAlignment=streamReadString(bu)end;if bitAND(self.changeFlags,b1.CHANGED_VALIGNMENT)~=0 then self.vAlignment=streamReadString(bu)end;if bitAND(self.changeFlags,b1.CHANGED_BACKGROUNDALPHA)~=0 then self.backgroundAlpha=streamReadFloat32(bu)end;if bitAND(self.changeFlags,b1.CHANGED_NORMALIZEPRICES)~=0 then self.normalizePrices=streamReadBool(bu)end;if bitAND(self.changeFlags,b1.CHANGED_ORDERBY)~=0 then self.orderBy=streamReadInt32(bu)end;self:run(bv)end;function b0:writeStream(bu,bv)streamWriteBool(bu,self.isFromServer)streamWriteInt32(bu,self.clientToServerUpdateInterval or 1000)streamWriteString(bu,self.nickname)streamWriteInt32(bu,self.changeFlags)if bitAND(self.changeFlags,b1.CHANGED_FONTSIZE)~=0 then streamWriteFloat32(bu,self.fontSize)end;if bitAND(self.changeFlags,b1.CHANGED_BASEPOSX)~=0 then streamWriteFloat32(bu,self.basePosX)end;if bitAND(self.changeFlags,b1.CHANGED_BASEPOSY)~=0 then streamWriteFloat32(bu,self.basePosY)end;if bitAND(self.changeFlags,b1.CHANGED_HALIGNMENT)~=0 then streamWriteString(bu,self.hAlignment)end;if bitAND(self.changeFlags,b1.CHANGED_VALIGNMENT)~=0 then streamWriteString(bu,self.vAlignment)end;if bitAND(self.changeFlags,b1.CHANGED_BACKGROUNDALPHA)~=0 then streamWriteFloat32(bu,self.backgroundAlpha)end;if bitAND(self.changeFlags,b1.CHANGED_NORMALIZEPRICES)~=0 then streamWriteBool(bu,self.normalizePrices)end;if bitAND(self.changeFlags,b1.CHANGED_ORDERBY)~=0 then streamWriteInt32(bu,self.orderBy)end end;function b0:run(bv)if self.isFromServer then if g_currentMission:getIsClient()and g_dedicatedServerInfo==nil then CommodityPricesClient.clientToServerUpdateInterval=self.clientToServerUpdateInterval;CommodityPricesClient:updatePlayer(self.nickname,self.fontSize,self.basePosX,self.basePosY,self.hAlignment,self.vAlignment,self.backgroundAlpha,self.normalizePrices,self.orderBy)end else local bp=false;if self.nickname==nil or self.nickname==''then for aN,bJ in ipairs(g_currentMission.users)do if bJ.connection==bv then self.nickname=bJ.nickname;break end end;bp=true end;CommodityPricesServer:updatePlayer(self.nickname,self.fontSize,self.basePosX,self.basePosY,self.hAlignment,self.vAlignment,self.backgroundAlpha,self.normalizePrices,self.orderBy,bp)end end;function b0:sendUpdate(bi,bH,bI)local bF=bi.changeFlags;if bF~=0 or bi.nickname==''then local aI,b7,b8,aE,aG,aD,aC,aP;if bitAND(bF,b1.CHANGED_FONTSIZE)~=0 then aI=bi.fontSize end;if bitAND(bF,b1.CHANGED_BASEPOSX)~=0 then b7=bi.basePosX end;if bitAND(bF,b1.CHANGED_BASEPOSY)~=0 then b8=bi.basePosY end;if bitAND(bF,b1.CHANGED_HALIGNMENT)~=0 then aE=bi.hAlignment end;if bitAND(bF,b1.CHANGED_VALIGNMENT)~=0 then aG=bi.vAlignment end;if bitAND(bF,b1.CHANGED_BACKGROUNDALPHA)~=0 then aD=bi.backgroundAlpha end;if bitAND(bF,b1.CHANGED_NORMALIZEPRICES)~=0 then aC=bi.normalizePrices end;if bitAND(bF,b1.CHANGED_ORDERBY)~=0 then aP=bi.orderBy end;local bw=b0:new(bi.nickname,bF,bi.populatedFlags,aI,b7,b8,aE,aG,aD,aC,aP,bH,bI)if bw.isFromServer then for aN,bJ in ipairs(g_currentMission.users)do if bJ.nickname==bw.nickname then bJ.connection:sendEvent(bw)break end end else g_client:getServerConnection():sendEvent(bw)end end end;InitEventClass(b0,"CommodityPricesUpdatePlayerEvent")return b0 end;local function bK()local a_=j()local aZ=br()local bm=bx(aZ,a_)local b1=bB()local b0=bD(b1)local bL={path=g_currentModDirectory}function bL:update(b4)end;function bL:deleteMap()end;function bL:loadMap(b5)if g_currentMission:getIsServer()then CommodityPricesServer=bl(self.path,bm,a_,b0,b1)end;if g_currentMission:getIsClient()and g_dedicatedServerInfo==nil then CommodityPricesClient=aX(self.path,aZ,a_,b0,b1)end;for bM,bN in ipairs(g_modEventListeners)do if bN==bL then g_modEventListeners[bM]=nil;break end end end;function bL:draw()end;function bL:mouseEvent(at,au,av,aw,ax)end;function bL:keyEvent(ay,az,aA,av)end;addModEventListener(bL)end;bK()
+      k:setCurrentTrend(s)
+    end;
+    if w~=nil and x~=nil then
+      k:setMeanPriceSumAndCount(w,x)
+    end;
+    if y~=nil then
+      k:setHighestPrice(y)
+    end;
+    if z~=nil then 
+      k:setLowestPrice(z)
+    end;
+    if s~=nil then 
+      k:setCurrentTrend(s)
+    end;
+    if k.changeFlags~=0 then
+      self.commoditiesDirty=true
+    end;
+    k.changeFlags=0;
+    return k 
+  end;
+  function Y:updateCommodities()
+    local b3=true;
+    for m,G in pairs(FillUtil.fillTypeIndexToDesc)do
+      if G.showOnPriceTable then 
+        local k=self:getExistingCommodity(m)
+        if k==nil then 
+          aZ:sendRequest(m)b3=false 
+        end
+      end
+    end;
+    if b3 then 
+      self.initialSyncDone=true 
+    end 
+  end;
+  function Y:initialServerUpdates()
+    if not self.initialSyncDone then
+      self:updateCommodities()
+    end 
+  end;
+  function Y:serverUpdates()
+    if self.player.nickname==''then
+      self.player.changeFlags=self.player.populatedFlags
+    end;
+    if self.player.changeFlags~=0 then
+      b0:sendUpdate(self.player,self.clientToServerUpdateInterval,false)
+      self.player.changeFlags=0 
+    end 
+  end;
+  function Y:update(b4)
+    self.dt=self.dt+b4;
+    self.gameTime=g_currentMission.environment.dayTime+g_currentMission.environment.currentDay*24*60*60*1000;
+    self.lastSyncTime=self.lastSyncTime+b4;
+    if self.lastSyncTime>=self.clientToServerUpdateInterval then 
+      self:initialServerUpdates()
+      self:serverUpdates()
+      self.lastSyncTime=0 
+    end
+  end;
+  function Y:minuteChanged()
+    self:updateCommodities()
+  end;
+  function Y:deleteMap()
+  end;
+  function Y:loadMap(b5)
+    self.isClient=g_currentMission:getIsClient()
+    self.isServer=g_currentMission:getIsServer()
+    self.isDedicated=g_dedicatedServerInfo~=nil
+  end;
+  function Y:updatePlayer(b6,aI,b7,b8,aE,aG,aD,aC,aP)
+    if b6~=nil then
+      self.player.nickname=b6 
+    end;
+    if aI~=nil then 
+      self:setFontSize(aI)end;
+    if b7~=nil then 
+      self:setBasePosX(b7)
+    end;
+    if b8~=nil then
+      self:setBasePosY(b8)
+    end;
+    if aE~=nil then 
+      self:setHAlignment(aE)
+    end;
+    if aG~=nil then
+      self:setVAlignment(aG)
+    end;
+    if aD~=nil then 
+      self:setBackgroundAlpha(aD)
+    end;
+    if aC~=nil then 
+      self:setNormalizePrices(aC)
+    end;
+    if aP~=nil then 
+      self:setOrderBy(aP)
+    end;
+    self.player.changeFlags=0
+  end;
+  X(Y)
+  aj(Y)
+  as(Y)
+  aB(Y)
+  addModEventListener(Y)
+  return Y
+end;
+local function b9(ba,b1)
+  function ba:saveCommodity(bb,bc,bd,k)
+    local be=string.format(bc..".Commodity(%d)",bd)
+    setXMLInt(bb,be.."#fillTypeId",k.fillTypeId)
+    setXMLFloat(bb,be.."#meanPriceSum",k.meanPriceSum)
+    setXMLFloat(bb,be.."#meanPriceCount",k.meanPriceCount)
+    setXMLFloat(bb,be.."#highestPrice",k.highestPrice)
+    setXMLFloat(bb,be.."#lowestPrice",k.lowestPrice)
+  end;
+  function ba:saveCommodities(bb,bf)
+    local bc=bf..".Commodities"
+    local bd=0;
+    for aN,k in pairs(self.commodities)do 
+      self:saveCommodity(bb,bc,bd,k)
+      bd=bd+1
+    end
+  end;
+  function ba:savePlayer(bb,bg,bh,bi)
+    local bj=string.format(bg..".Player(%d)",bh)
+    setXMLString(bb,bj.."#nickname",bi.nickname)
+    setXMLFloat(bb,bj.."#fontSize",bi.fontSize)
+    setXMLFloat(bb,bj.."#basePosX",bi.basePosX)
+    setXMLFloat(bb,bj.."#basePosY",bi.basePosY)
+    setXMLString(bb,bj.."#hAlignment",bi.hAlignment)
+    setXMLString(bb,bj.."#vAlignment",bi.vAlignment)
+    setXMLFloat(bb,bj.."#backgroundAlpha",bi.backgroundAlpha)
+    setXMLInt(bb,bj.."#orderBy",bi.orderBy)
+    setXMLBool(bb,bj.."#normalizePrices",bi.normalizePrices)
+  end;
+  function ba:savePlayers(bb,bf)
+    local bg=bf..".Players"
+    local bh=0;
+    for aN,bi in pairs(self.players)do
+      self:savePlayer(bb,bg,bh,bi)bh=bh+1
+    end 
+  end;
+  function ba:saveSavegameToFile(bb)
+    local bf="CommodityPrices"
+    setXMLInt(bb,bf.."#serverToClientUpdateInterval",self.serverToClientUpdateInterval)
+    setXMLInt(bb,bf.."#clientToServerUpdateInterval",self.clientToServerUpdateInterval)
+    self:savePlayers(bb,bf)self:saveCommodities(bb,bf)
+  end;
+  function ba:saveSavegame()
+    local bf="CommodityPrices"
+    local bb=createXMLFile("CommodityPrices.xml",g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml',bf)
+    self:saveSavegameToFile(bb)
+    saveXMLFile(bb)
+  end;
+  function ba:loadCommodity(bb,bc,bd)
+    local be=string.format(bc..".Commodity(%d)",bd)
+    local bk=false;
+    local m=getXMLInt(bb,be.."#fillTypeId")
+    if m~=nil then
+      self:syncCommodity(m,getXMLFloat(bb,be.."#currentPriceLocationName"),getXMLFloat(bb,be.."#currentPrice"),getXMLFloat(bb,be.."#meanPriceSum"),getXMLFloat(bb,be.."#meanPriceCount"),getXMLFloat(bb,be.."#highestPrice"),getXMLFloat(bb,be.."#lowestPrice"))
+      bk=true 
+    end;
+    return bk
+  end;
+  function ba:loadCommodities(bb,bf)
+    local bc=bf..".Commodities"
+    self.commodities={}
+    local bd=0;
+    while self:loadCommodity(bb,bc,bd)do
+      bd=bd+1
+    end
+  end;
+  function ba:loadPlayer(bb,bg,bh)
+    local bj=string.format(bg..".Player(%d)",bh)
+    local bk=false;
+    local b6=getXMLString(bb,bj.."#nickname")
+    if b6~=nil then
+      local bi=b1:new(b6)
+      bi:setFontSize(Utils.getNoNil(getXMLFloat(bb,bj.."#fontSize"),0.01))
+      bi:setBasePosX(Utils.getNoNil(getXMLFloat(bb,bj.."#basePosX"),0.97708))
+      bi:setBasePosY(Utils.getNoNil(getXMLFloat(bb,bj.."#basePosY"),0.89583))
+      bi:setHAlignment(Utils.getNoNil(getXMLString(bb,bj.."#hAlignment"),"right"))
+      bi:setVAlignment(Utils.getNoNil(getXMLString(bb,bj.."#vAlignment"),"top"))
+      bi:setBackgroundAlpha(Utils.getNoNil(getXMLFloat(bb,bj.."#backgroundAlpha"),0.7))
+      bi:setNormalizePrices(Utils.getNoNil(getXMLBool(bb,bj.."#normalizePrices"),true))
+      bi:setOrderBy(Utils.getNoNil(getXMLInt(bb,bj.."#orderBy"),7))
+      self.players[bi.nickname]=bi;
+      bk=true
+    end;
+    return bk 
+  end;
+  function ba:loadPlayers(bb,bf)
+    local bg=bf..".Players"
+    self.players={}
+    local bh=0;
+    while self:loadPlayer(bb,bg,bh)do 
+      bh=bh+1 
+    end
+  end;
+  function ba:loadSavegameFromFile(bb)
+    local bf="CommodityPrices"
+    self.serverToClientUpdateInterval=Utils.getNoNil(getXMLInt(bb,bf.."#serverToClientUpdateInterval"),1000)
+    self.clientToServerUpdateInterval=Utils.getNoNil(getXMLInt(bb,bf.."#clientToServerUpdateInterval"),1000)
+    self:loadPlayers(bb,bf)
+    self:loadCommodities(bb,bf)
+    self.firstLoad=true 
+  end;
+  function ba:loadSavegame()
+    local bf="CommodityPrices"
+    local bk=false;
+    if g_currentMission.missionInfo.savegameDirectory and fileExists(g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml')then
+      local bb=loadXMLFile("CommodityPrices.xml",g_currentMission.missionInfo.savegameDirectory..'/CommodityPrices.xml')
+      self:loadSavegameFromFile(bb)bk=true 
+    end;
+    return bk 
+  end;
+  --Line needs broken down
+  g_careerScreen.saveSavegame=Utils.appendedFunction(g_careerScreen.saveSavegame,function()ba:saveSavegame()end)
+end;
+local function bl(aY,bm,a_,b0,b1)
+  --Break down line
+  local ba={path=aY,commodities={},players={},gameTime=0,dt=0,firstLoad=true,serverToClientUpdateInterval=1000,clientToServerUpdateInterval=1000}
+  function ba:getBestLocationInfo(m)
+    local q=0;
+    local o=nil;
+    local s=nil;
+    for bn,aN in pairs(g_currentMission.tipTriggers)do 
+      if bn.acceptedFillTypes[m]then 
+        local bo=bn:getEffectiveFillTypePrice(m)*1000;
+        if bo>q then
+          q=bo;o=bn.stationName;
+          s=bn:getCurrentPricingTrend(m)
+        end
+      end 
+    end;
+    return math.floor(q),o,s 
+  end;
+  function ba:getExistingCommodity(m)
+    local k=self.commodities[m]
+    return k
+  end;
+  function ba:getCommodity(m)
+    local k=self.commodities[m]
+    if k==nil then 
+      k=a_:new(m)
+      self.commodities[m]=k
+    end;
+    return k 
+  end;
+  function ba:syncCommodity(m,o,q,w,x,y,z,b2)
+    local k=self:getCommodity(m)
+    if o~=nil and q~=nil then
+      k:update(o,q,true)
+    end;
+    if w~=nil and x~=nil then
+      k:setMeanPriceSumAndCount(w,x)
+    end;
+    if y~=nil then
+      k:setHighestPrice(y)
+    end;
+    if z~=nil then
+      k:setLowestPrice(z)
+    end;
+    return k
+  end;
+  function ba:updateCommodity(m)
+    local p=false;
+    local k=self:getCommodity(m)
+    local q,o,s=self:getBestLocationInfo(m)
+    k:update(o,q)
+    k:setCurrentTrend(s)
+  end;
+  function ba:updateCommodities()
+    for m,G in pairs(FillUtil.fillTypeIndexToDesc)do 
+      if G.showOnPriceTable then
+        self:updateCommodity(m)
+      elseif self.commodities[m]~=nil then
+        self.commodities[m]=nil 
+      end
+    end
+  end;
+  function ba:update(b4)
+    self.dt=self.dt+b4;
+    self.gameTime=g_currentMission.environment.dayTime+g_currentMission.environment.currentDay*24*60*60*1000;
+    if self.lastSyncTime~=nil then
+      self.lastSyncTime=self.lastSyncTime+b4 
+    end;
+    if self.firstLoad then 
+      if self.lastUpdateTime==nil then
+        self.lastUpdateTime=self.gameTime
+      end;
+      if self.gameTime-self.lastUpdateTime>=500 then
+        self.firstLoad=nil;
+        self.lastUpdateTime=self.gameTime;
+        self:updateCommodities()
+        self.lastSyncTime=0 
+      end
+    elseif self.lastSyncTime~=nil and self.lastSyncTime>=self.serverToClientUpdateInterval then
+      for aN,k in pairs(self.commodities)do 
+        if k.changeFlags>0 then
+          bm:sendUpdate(k)k.changeFlags=0 
+        end
+      end;
+      for aN,bi in pairs(self.players)do 
+        if bi.changeFlags~=0 then
+          b0:sendUpdate(bi,self.clientToServerUpdateInterval,true)
+          bi.changeFlags=0
+        end
+      end;
+      self.lastSyncTime=0 
+    end
+  end;
+  function ba:updatePlayer(b6,aI,b7,b8,aE,aG,aD,aC,aP,bp)
+    local bi=self.players[b6]
+    local bq=false;
+    if bi==nil then
+      bi=b1:new(b6)self.players[bi.nickname]=bi;
+      bq=true
+    end;
+    if bq or not bp then 
+      if aI~=nil then
+        bi:setFontSize(aI)
+      end;
+      if b7~=nil then
+        bi:setBasePosX(b7)
+      end;
+      if b8~=nil then
+        bi:setBasePosY(b8)
+      end;
+      if aE~=nil then
+        bi:setHAlignment(aE)
+      end;
+      if aG~=nil then
+        bi:setVAlignment(aG)
+      end;
+      if aD~=nil then
+        bi:setBackgroundAlpha(aD)
+      end;
+      if aC~=nil then
+        bi:setNormalizePrices(aC)
+      end;
+      if aP~=nil then
+        bi:setOrderBy(aP)
+      end
+    end;
+    if bp then
+      bi.changeFlags=bi.POPULATED_ALL
+    elseif not bq then 
+      bi.changeFlags=0 
+    end 
+  end;
+  function ba:minuteChanged()
+    self:updateCommodities()
+  end;
+  function ba:deleteMap()
+  end;
+  function ba:loadMap(b5)
+    self.isClient=g_currentMission:getIsClient()
+    self.isServer=g_currentMission:getIsServer()
+    self.isDedicated=g_dedicatedServerInfo~=nil;
+    self:loadSavegame()
+    g_currentMission.environment:addMinuteChangeListener(self)
+  end;
+  function ba:draw()
+  end;
+  function ba:mouseEvent(at,au,av,aw,ax)
+  end;
+  function ba:keyEvent(ay,az,aA,av)
+  end;
+  addModEventListener(ba)
+  b9(ba,b1)
+  return ba
+end;
+local function br()
+  local bs={}
+  local bt=Class(bs,Event)
+  function bs:emptyNew()
+    local self=Event:new(bt)
+    return self 
+  end;
+  function bs:new(m)
+    local self=bs:emptyNew()
+    self.fillTypeId=m;
+    return self
+  end;
+  function bs:readStream(bu,bv)
+    self.fillTypeId=streamReadFloat32(bu)
+    self:run(bv)
+  end;
+  function bs:writeStream(bu,bv)
+    streamWriteFloat32(bu,self.fillTypeId)
+  end;
+  function bs:run(bv)
+    local k=CommodityPricesServer:getExistingCommodity(self.fillTypeId)
+    if k~=nil then
+      k.changeFlags=k.populatedFlags
+    end
+  end;
+  function bs:sendRequest(m)
+    local bw=bs:new(m)g_client:getServerConnection():sendEvent(bw)
+  end;
+  InitEventClass(bs,"CommodityPricesRequestEvent")
+  return bs 
+end;
+local function bx(aZ,a_)
+  local by={}
+  local bz=Class(by,Event)
+  function by:emptyNew()
+    local self=Event:new(bz)
+    return self 
+  end;
+  function by:readStream(bu,bv)
+    self.fillTypeId=streamReadFloat32(bu)
+    self.changeFlags=streamReadInt32(bu)
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then
+      self.currentPriceLocationName=streamReadString(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then
+      self.currentPrice=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then
+      self.meanPriceSum=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then 
+      self.meanPriceCount=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then 
+      self.highestPrice=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then 
+      self.lowestPrice=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then 
+      self.currentTrend=streamReadFloat32(bu)
+    end;
+    self:run(bv)
+  end;
+  function by:writeStream(bu,bv)
+    streamWriteFloat32(bu,self.fillTypeId)
+    streamWriteInt32(bu,self.changeFlags)
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then 
+      streamWriteString(bu,self.currentPriceLocationName)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then
+      streamWriteFloat32(bu,self.currentPrice)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then 
+      streamWriteFloat32(bu,self.meanPriceSum)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then
+      streamWriteFloat32(bu,self.meanPriceCount)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then
+      streamWriteFloat32(bu,self.highestPrice)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then
+      streamWriteFloat32(bu,self.lowestPrice)
+    end;
+    if bitAND(self.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then
+      streamWriteFloat32(bu,self.currentTrend)
+    end
+  end;
+  function by:run(bv)
+    if g_dedicatedServerInfo==nil then 
+      local k=CommodityPricesClient:getExistingCommodity(self.fillTypeId)
+      if k~=nil and k.populatedFlags==a_.POPULATED_ALL or self.changeFlags==a_.POPULATED_ALL then
+        CommodityPricesClient:syncCommodity(self.fillTypeId,self.currentPriceLocationName,self.currentPrice,self.meanPriceSum,self.meanPriceCount,self.highestPrice,self.lowestPrice,self.currentTrend)
+      else
+        aZ:sendRequest(self.fillTypeId)
+      end 
+    end
+  end;
+  function by:sendUpdate(k,bv,bA)
+    local bw=by:emptyNew()
+    bw.fillTypeId=k.fillTypeId;
+    bw.changeFlags=k.changeFlags;
+    if bA then 
+      bw.changeFlags=k.populatedFlags 
+    end;
+    if bw.changeFlags~=0 and k.populatedFlags==a_.POPULATED_ALL then 
+      if bitAND(bw.changeFlags,a_.CHANGED_CURRENTPRICELOCATIONNAME)~=0 then 
+        bw.currentPriceLocationName=k.currentPriceLocationName
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_CURRENTPRICE)~=0 then
+        bw.currentPrice=k.currentPrice
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_MEANPRICESUM)~=0 then
+        bw.meanPriceSum=k.meanPriceSum 
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_MEANPRICECOUNT)~=0 then
+        bw.meanPriceCount=k.meanPriceCount
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_HIGHESTPRICE)~=0 then
+        bw.highestPrice=k.highestPrice
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_LOWESTPRICE)~=0 then 
+        bw.lowestPrice=k.lowestPrice 
+      end;
+      if bitAND(bw.changeFlags,a_.CHANGED_CURRENTTREND)~=0 then 
+        bw.currentTrend=k.currentTrend 
+      end;
+      if bv==nil then 
+        g_server:broadcastEvent(bw,g_dedicatedServerInfo==nil)
+      else
+        bv:sendEvent(bw)
+      end
+    end 
+  end;
+  InitEventClass(by,"CommodityPricesUpdateEvent")
+  return by 
+end;
+local function bB()
+  local bi={}
+  local bC=Class(bi)
+  bi.CHANGED_FONTSIZE=1;
+  bi.CHANGED_BASEPOSX=2;
+  bi.CHANGED_BASEPOSY=4;
+  bi.CHANGED_HALIGNMENT=8;
+  bi.CHANGED_VALIGNMENT=16;
+  bi.CHANGED_BACKGROUNDALPHA=32;
+  bi.CHANGED_NORMALIZEPRICES=64;
+  bi.CHANGED_ORDERBY=128;
+  bi.POPULATED_ALL=255;
+  function bi:new(b6,n)
+    local self={}
+    setmetatable(self,n or bC)
+    self.changeFlags=0;
+    self.populatedFlags=0;
+    self.nickname=b6;
+    return self 
+  end;
+  function bi:setFontSize(aI)
+    local p=false;
+    if self.fontSize~=aI then
+      self.fontSize=aI;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_FONTSIZE)
+      if self.fontSize~=nil then
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_FONTSIZE)
+      else 
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_FONTSIZE)
+      end;
+      p=true
+    end;
+    return p 
+  end;
+  function bi:setBasePosX(b7)
+    local p=false;
+    if self.basePosX~=b7 then
+      self.basePosX=b7;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BASEPOSX)
+      if self.basePosX~=nil then 
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BASEPOSX)
+      else 
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BASEPOSX)
+      end;
+      p=true
+    end;
+    return p
+  end;
+  function bi:setBasePosY(b8)
+    local p=false;
+    if self.basePosY~=b8 then
+      self.basePosY=b8;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BASEPOSY)
+      if self.basePosY~=nil then 
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BASEPOSY)
+      else 
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BASEPOSY)
+      end;
+      p=true
+    end;
+    return p
+  end;
+  function bi:setHAlignment(aE)
+    local p=false;
+    if self.hAlignment~=aE then 
+      self.hAlignment=aE;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_HALIGNMENT)
+      if self.hAlignment~=nil then
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_HALIGNMENT)
+      else 
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_HALIGNMENT)
+      end;
+      p=true 
+    end;
+    return p
+  end;
+  function bi:setVAlignment(aG)
+    local p=false;
+    if self.vAlignment~=aG then
+      self.vAlignment=aG;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_VALIGNMENT)
+      if self.vAlignment~=nil then 
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_VALIGNMENT)
+      else
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_VALIGNMENT)
+      end;
+      p=true 
+    end;
+    return p 
+  end;
+  function bi:setBackgroundAlpha(aD)
+    local p=false;
+    if self.backgroundAlpha~=aD then 
+      self.backgroundAlpha=aD;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_BACKGROUNDALPHA)
+      if self.backgroundAlpha~=nil then 
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_BACKGROUNDALPHA)
+      else self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_BACKGROUNDALPHA)
+      end;
+      p=true
+    end;
+    return p 
+  end;
+  function bi:setNormalizePrices(aC)
+    local p=false;
+    if self.normalizePrices~=aC then
+      self.normalizePrices=aC;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_NORMALIZEPRICES)
+      if self.normalizePrices~=nil then
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_NORMALIZEPRICES)
+      else 
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_NORMALIZEPRICES)
+      end;
+      p=true
+    end;
+    return p 
+  end;
+  function bi:setOrderBy(aP)
+    local p=false;
+    if self.orderBy~=aP then
+      self.orderBy=aP;
+      self.changeFlags=bitOR(self.changeFlags,bi.CHANGED_ORDERBY)
+      if self.orderBy~=nil then 
+        self.populatedFlags=bitOR(self.populatedFlags,bi.CHANGED_ORDERBY)
+      else
+        self.populatedFlags=bitAND(self.populatedFlags,bi.POPULATED_ALL-bi.CHANGED_ORDERBY)
+      end;
+      p=true
+    end;
+    return p
+  end;
+  return bi
+end;
+local function bD(b1)
+  local b0={}
+  local bE=Class(b0,Event)
+  function b0:emptyNew()
+    local self=Event:new(bE)
+    return self 
+  end;
+  function b0:new(b6,bF,bG,aI,b7,b8,aE,aG,aD,aC,aP,bH,bI)
+    local self=b0:emptyNew()
+    self.nickname=b6;s
+    elf.changeFlags=bF;
+    self.populatedFlags=bG;
+    self.fontSize=aI;
+    self.basePosX=b7;
+    self.basePosY=b8;
+    self.hAlignment=aE;
+    self.vAlignment=aG;
+    self.backgroundAlpha=aD;
+    self.normalizePrices=aC;
+    self.orderBy=aP;
+    self.clientToServerUpdateInterval=bH;
+    self.isFromServer=bI;
+    return self 
+  end;
+  function b0:readStream(bu,bv)
+    self.isFromServer=streamReadBool(bu)
+    self.clientToServerUpdateInterval=streamReadInt32(bu)
+    self.nickname=streamReadString(bu)
+    self.changeFlags=streamReadInt32(bu)
+    if bitAND(self.changeFlags,b1.CHANGED_FONTSIZE)~=0 then 
+      self.fontSize=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BASEPOSX)~=0 then
+      self.basePosX=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BASEPOSY)~=0 then 
+      self.basePosY=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_HALIGNMENT)~=0 then 
+      self.hAlignment=streamReadString(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_VALIGNMENT)~=0 then
+      self.vAlignment=streamReadString(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BACKGROUNDALPHA)~=0 then 
+      self.backgroundAlpha=streamReadFloat32(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_NORMALIZEPRICES)~=0 then
+      self.normalizePrices=streamReadBool(bu)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_ORDERBY)~=0 then 
+      self.orderBy=streamReadInt32(bu)
+    end;
+    self:run(bv)
+  end;
+  function b0:writeStream(bu,bv)
+    streamWriteBool(bu,self.isFromServer)
+    streamWriteInt32(bu,self.clientToServerUpdateInterval or 1000)
+    streamWriteString(bu,self.nickname)
+    streamWriteInt32(bu,self.changeFlags)
+    if bitAND(self.changeFlags,b1.CHANGED_FONTSIZE)~=0 then 
+      streamWriteFloat32(bu,self.fontSize)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BASEPOSX)~=0 then
+      streamWriteFloat32(bu,self.basePosX)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BASEPOSY)~=0 then
+      streamWriteFloat32(bu,self.basePosY)end;
+    if bitAND(self.changeFlags,b1.CHANGED_HALIGNMENT)~=0 then 
+      streamWriteString(bu,self.hAlignment)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_VALIGNMENT)~=0 then
+      streamWriteString(bu,self.vAlignment)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_BACKGROUNDALPHA)~=0 then
+      streamWriteFloat32(bu,self.backgroundAlpha)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_NORMALIZEPRICES)~=0 then
+      streamWriteBool(bu,self.normalizePrices)
+    end;
+    if bitAND(self.changeFlags,b1.CHANGED_ORDERBY)~=0 then 
+      streamWriteInt32(bu,self.orderBy)
+    end 
+  end;
+  function b0:run(bv)
+    if self.isFromServer then
+      if g_currentMission:getIsClient()and g_dedicatedServerInfo==nil then 
+        CommodityPricesClient.clientToServerUpdateInterval=self.clientToServerUpdateInterval;
+        CommodityPricesClient:updatePlayer(self.nickname,self.fontSize,self.basePosX,self.basePosY,self.hAlignment,self.vAlignment,self.backgroundAlpha,self.normalizePrices,self.orderBy)
+      end 
+    else 
+      local bp=false;
+      if self.nickname==nil or self.nickname==''then
+        for aN,bJ in ipairs(g_currentMission.users)do 
+          if bJ.connection==bv then 
+            self.nickname=bJ.nickname;
+            break
+          end 
+        end;
+        bp=true 
+      end;
+      CommodityPricesServer:updatePlayer(self.nickname,self.fontSize,self.basePosX,self.basePosY,self.hAlignment,self.vAlignment,self.backgroundAlpha,self.normalizePrices,self.orderBy,bp)
+    end 
+  end;
+  function b0:sendUpdate(bi,bH,bI)
+    local bF=bi.changeFlags;
+    if bF~=0 or bi.nickname==''then 
+      local aI,b7,b8,aE,aG,aD,aC,aP;
+      if bitAND(bF,b1.CHANGED_FONTSIZE)~=0 then
+        aI=bi.fontSize
+      end;
+      if bitAND(bF,b1.CHANGED_BASEPOSX)~=0 then 
+        b7=bi.basePosX end;
+      if bitAND(bF,b1.CHANGED_BASEPOSY)~=0 then
+        b8=bi.basePosY
+      end;
+      if bitAND(bF,b1.CHANGED_HALIGNMENT)~=0 then
+        aE=bi.hAlignment 
+      end;
+      if bitAND(bF,b1.CHANGED_VALIGNMENT)~=0 then
+        aG=bi.vAlignment
+      end;
+      if bitAND(bF,b1.CHANGED_BACKGROUNDALPHA)~=0 then
+        aD=bi.backgroundAlpha 
+      end;
+      if bitAND(bF,b1.CHANGED_NORMALIZEPRICES)~=0 then 
+        aC=bi.normalizePrices 
+      end;
+      if bitAND(bF,b1.CHANGED_ORDERBY)~=0 then 
+        aP=bi.orderBy 
+      end;
+      local bw=b0:new(bi.nickname,bF,bi.populatedFlags,aI,b7,b8,aE,aG,aD,aC,aP,bH,bI)
+      if bw.isFromServer then
+        for aN,bJ in ipairs(g_currentMission.users)do
+          if bJ.nickname==bw.nickname then 
+            bJ.connection:sendEvent(bw)
+            break
+          end
+        end
+      else
+        g_client:getServerConnection():sendEvent(bw)
+      end 
+    end
+  end;
+  InitEventClass(b0,"CommodityPricesUpdatePlayerEvent")
+  return b0 
+end;
+local function bK()
+  local a_=j()
+  local aZ=br()
+  local bm=bx(aZ,a_)
+  local b1=bB()
+  local b0=bD(b1)
+  local bL={path=g_currentModDirectory}
+  function bL:update(b4)
+  end;
+  function bL:deleteMap()
+  end;
+  function bL:loadMap(b5)
+    if g_currentMission:getIsServer()then 
+      CommodityPricesServer=bl(self.path,bm,a_,b0,b1)
+    end;
+    if g_currentMission:getIsClient()and g_dedicatedServerInfo==nil then
+      CommodityPricesClient=aX(self.path,aZ,a_,b0,b1)
+    end;
+    for bM,bN in ipairs(g_modEventListeners)do 
+      if bN==bL then
+        g_modEventListeners[bM]=nil;
+        break
+      end
+    end 
+  end;
+  function bL:draw()
+  end;
+  function bL:mouseEvent(at,au,av,aw,ax)
+  end;
+  function bL:keyEvent(ay,az,aA,av)
+  end;
+  addModEventListener(bL)
+end;
+bK()
